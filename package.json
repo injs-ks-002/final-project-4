@@ -1,0 +1,43 @@
+{
+  "name": "final-project-4",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "NODE_ENV=test npx jest --detectOpenHandles",
+    "start": "node .",
+    "dev": "nodemon app.js",
+    "db:create": "npx sequelize-cli db:create",
+    "db:create:migrate": "sequelize migration:generate --name",
+    "db:migrate": "npx sequelize-cli db:migrate",
+    "db:rollback": "npx sequelize-cli db:migrate:undo:all",
+    "db:seed": "npx sequelize-cli db:seed:all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/injs-ks-002/final-project-4.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/injs-ks-002/final-project-4/issues"
+  },
+  "homepage": "https://github.com/injs-ks-002/final-project-4#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-validator": "^6.14.1",
+    "jsonwebtoken": "^8.5.1",
+    "node-mocks-http": "^1.11.0",
+    "pg": "^8.7.3",
+    "sequelize": "^6.20.1"
+  },
+  "devDependencies": {
+    "jest": "^28.1.1",
+    "nodemon": "^2.0.16",
+    "sequelize-cli": "^6.4.1",
+    "supertest": "^6.2.3"
+  }
+}
