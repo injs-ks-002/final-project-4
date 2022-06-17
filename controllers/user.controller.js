@@ -2,7 +2,9 @@ const User = require("../models/index").User;
 const bcrypt = require('bcrypt')
 const { generateToken } = require ('../middleware/auth.js');
 const {validationResult} = require('express-validator')
-
+const errorFormatter = ({ msg }) => {
+    return `${msg}`;
+}
 exports.getUser = async (req, res) => {
     return User.findAll().then(users=> {
         res.status(200).send({
@@ -36,14 +38,16 @@ exports.signUp = async(req, res) => {
     }).then((user) => {
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
-            return res.status(422).json({
-                "errors": errors.array()
+            return res.status(400).json({
+                'status': 400,
+                'message': errors.array().join(',')
             })
         }
        else{
         if (user) {
-            return res.status(400).send({
-                message: "Email already Exist",
+            return res.status(400).json({
+                'status': 400,
+                'message': errors.array().join(',')
             });
         }
         const salt = bcrypt.genSaltSync(10);
@@ -166,8 +170,9 @@ exports.updateUser = async (req, res) => {
         .then((user) => {
             if (!errors.isEmpty()) {
                 return res.status(422).json({
-                    "errors": errors.array()
-                })
+                'status': 422,
+                'message': errors.array().join(',')
+            })
             } else {
                 if (req.params.userId != id) {
                     res.status(400).send({
@@ -185,7 +190,8 @@ exports.updateUser = async (req, res) => {
         .catch((error) => {
             if (!errors.isEmpty()) {
                 return res.status(422).json({
-                    "errors": errors.array()
+                    'status': 422,
+                    "errors": errors.array().join(',')
                 })
             } else {
                 console.log(error);

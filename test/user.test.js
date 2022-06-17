@@ -1,131 +1,212 @@
-const userController = require("../controllers/user.controller");
-const httpMocks = require("node-mocks-http");
-const bcrypt = require("bcrypt");
-const User = require("../models/index").User
-const generateToken = require("../middleware/auth").generateToken;
+const request = require('supertest')
+const app = require('../app-test')
+const { sequelize } = require('../models')
+var jwt = require('jsonwebtoken');
+let privateKey = 'helloworld'
 
-jest.mock("../models");
-jest.mock("../middleware/auth");
+const userData = {
+    "email": "riyad@gmail.com",
+    "password": "ahmad"
+}
 
-let req, res;
+const userDataFailed = {
+    "email": "ahmad@gmail.com",
+    "password": "ahmad"
+}
 
-beforeEach(() => {
-    req = httpMocks.createRequest();
-    res = httpMocks.createResponse();
-    bcrypt.compareSync = jest.fn().mockImplementation(() => true);
-});
+const userDataFailedlogin = {
+    "email": "admingmail.com",
+    "password": 124
+}
 
-describe("User Controller signUp", () => {
-    it("user register should return 400 ", async() => {
-        const email = "email@gmail.com";
-        User.findOne.mockResolvedValue({ email: email });
-        await userController.signUp(req, res);
-        expect(res.statusCode).toBe(400);
-    });
+var userId = ''
+const id_not_found = 0
+var token = ''
 
-    it('should return 200', async () => {
-        try{
-            User.findOne.mockResolvedValue(null)    
-        User.create.mockResolvedValue({ 
-            email : "helo"
-        })  
-        await userController.signUp(req, res);
-        }catch{
-            expect(res.statusCode).toBe(200);
-        }
-        
-     })
-    it("User register should return 500", async() => {
-        const errData = {
-            status: 503,
-            message: "Internal server error"
-        }
-        try {
-            User.findOne.mockResolvedValue(errData)
-            await userController.signUp(req, res)
-        } catch {
-            expect(res.statusCode).toBe(503)
-        }
-    });
+const dataRegistrasiFailed = {
+    full_name: "ahmad",
+    email: "riyadgmail.com",
+    username: 234345,
+    password: "riyad",
+    profile_image_url: "https://github.com/",
+    age: 20,
+    phone_number: 3234534
+}
 
-});
+const updateUser = {
+    full_name: "ahmadriyad",
+    email: "ahmadriyad@gmail.com",
+    username: "ahmad",
+    profile_image_url: "https://github.com/",
+    age: 20,
+    phone_number: 3234534
+}
 
-describe("userController signIn", () => {
-    beforeAll(() => {
-        bcrypt.hashSync = jest.fn();
-        generateToken.mockReturnValue("get Token");
-    });
+const dataRegistrasiNewUser = {
+    full_name: "ahmad",
+    email: "riyad@gmail.com",
+    username: "ahmad",
+    password: "ahmad",
+    profile_image_url: "https://github.com/",
+    age: 20,
+    phone_number: 3234534
+}
 
-    it("sign should return 400 if email not found", async() => {
-        User.findOne.mockResolvedValue(null);
-        await userController.signIn(req, res);
-        expect(res.statusCode).toBe(400);
-    });
+describe('User register', () => {
+    it("should return 201", (done) => {
+        request(app).post("/users/register")
+            .send(dataRegistrasiNewUser)
+            .then(res => {
+                expect(res.status).toEqual(201)
+                expect(typeof res.body).toEqual("object")
+                expect(res.body.phone_number).toEqual(dataRegistrasiNewUser.phone_number)
+                expect(res.body.age).toEqual(dataRegistrasiNewUser.age)
+                expect(res.body.username).toEqual(dataRegistrasiNewUser.username)
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
 
-    it("User login should return 400 if password not match", async() => {
-        const data = {
-            email: "email",
-            password: "wrongpassword",
-        };
-        User.findOne.mockResolvedValue(data);
-        bcrypt.compareSync = jest.fn().mockImplementation(() => false);
-        await userController.signIn(req, res);
-        expect(res.statusCode).toBe(400);
-    });
-
-    it("User login should return 200 ", async() => {
-        User.findOne.mockResolvedValue({ user: "login" });
-        userController.signIn(req, res);
-        expect(res.statusCode).toBe(200);
-    });
-
-    it("User login should return 500", async() => {
-        const errData = {
-            status: 503,
-            message: "Internal server error"
-        }
-        try {
-            User.findOne.mockResolvedValue(errData)
-            await userController.signIn(req, res)
-        } catch {
-            expect(res.statusCode).toBe(503)
-        }
-    });
-});
-
-describe("userController updateUser", () => {
-    it("User update should return 200 updated", async() => {
-        User.update.mockResolvedValue({ user: "user" });
-        await userController.updateUser(req, res);
-        expect(res.statusCode).toBe(200);
-    });
-
-    it("User update should return 500", async() => {
-        const rejected = Promise.reject({ message: "internal server error" });
-        User.update.mockResolvedValue(rejected);
-        await userController.updateUser(req, res);
-        expect(res.statusCode).toBe(500);
-    });
-});
+    it("should return 400", (done) => {
+        request(app)
+            .post('/users/register')
+            .send(dataRegistrasiNewUser)
+            .then(res => {
+                expect(res.status).toEqual(400)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body.message).toEqual("string")
+                expect(typeof res.body.message).toEqual("string")
+                expect(typeof res.status).toEqual("number")
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+})
 
 
-describe("userController deleteUser", () => {
-    it("user delete should return 200 deleted", async() => {
-        User.destroy.mockResolvedValue({ user: "user" });
-        await userController.deleteUser(req, res);
-        expect(res.statusCode).toBe(200);
-    });
 
-        it("User delete should return 500", async() => {
-            const errData = {
-                status: 503,
-                message: "Internal server error"
-            }
-            try {
-                User.destroy.mockResolvedValue(errData)
-                await userController.deleteUser(req, res)
-            } catch {
-                expect(res.statusCode).toBe(503)
-            }
-        });
-  });
+describe('User loginUser', () => {
+    it("should return 200", (done) => {
+        request(app).post("/users/login")
+            .send(userData)
+            .then(res => {
+                userId = res.body.id
+                console.log(userId)
+                token = res.body.token
+                jwt.verify(token, privateKey, (err, decoded)=> {
+                    userId = decoded.id
+                });
+                expect(res.status).toEqual(200)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body.token).toEqual("string")
+                expect(typeof res.body.token).not.toEqual("object")
+                expect(typeof res.status).toEqual("number")
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+
+    it("should return 400", (done) => {
+        request(app).post("/users/login")
+            .send(userDataFailed)
+            .then(res => {
+                expect(res.status).toEqual(400)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body).not.toEqual("string")
+                expect(typeof res.body).not.toEqual("text")
+                expect(typeof res.status).toEqual("number")
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+ })
+
+
+describe('User updateUser', () => {
+    it("should return 200", (done) => {
+        request(app).put(`/users/${userId}`)
+            .set('auth', `${token}`)
+            .send(updateUser)
+            .then(res => {
+                expect(res.status).toEqual(200)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body.user.username).toEqual("string")
+                expect(typeof res.body.user.full_name).toEqual("string")
+                expect(typeof res.body.user.age).toEqual("number")
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+
+    it("should return 400", (done) => {
+        request(app).put(`/users/${id_not_found}`)
+            .set('auth', `${token}`)
+            .send(updateUser)
+            .then(res => {
+                expect(res.status).toEqual(400)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body.message).toEqual("string")
+                expect(typeof res.body.message).toEqual("string")
+                expect(typeof res.status).toEqual("number")
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+
+  })
+
+
+describe('User deleteUser', () => {
+    it("should return 200", (done) => {
+        request(app).delete(`/users/${userId}`)
+            .set('auth', `${token}`)
+            .then(res => {
+                userId = res.body.id
+                console.log(userId)
+                expect(res.status).toEqual(200)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body.message).toEqual("string")
+                expect(res.body.message).toEqual('Your User has been succesfully deleted')
+                expect(typeof res.body.message).not.toEqual("number")
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+
+    it("should return 400", (done) => {
+        request(app).delete(`/users/${id_not_found}`)
+            .set('auth', `${token}`)
+            .then(res => {
+                userId = res.body.id
+                console.log(userId)
+                token = res.body.token
+                expect(res.status).toEqual(400)
+                expect(typeof res.body).toEqual("object")
+                expect(typeof res.body.message).toEqual("string")
+                expect(typeof res.body.status).toEqual("string")
+                expect(res.body.status).toEqual('400')
+                done()
+            })
+            .catch(err => {
+                done(err)
+            })
+    })
+
+
+ })
+
+

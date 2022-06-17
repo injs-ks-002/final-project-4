@@ -1,5 +1,8 @@
 const {Photo, Comment, User} = require("../models/index");
 const {validationResult} = require('express-validator')
+const errorFormatter = ({ msg }) => {
+    return `${msg}`;
+}
 
 exports.getPhoto = async (req, res) => {
     const userId = req.id
@@ -57,14 +60,17 @@ exports.postPhoto = async (req, res) => {
                 userId: photo.userId,
              })
         }
-    }).catch((e) => {
+    }).catch((err) => {
         if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array())
+            return res.status(400).json({
+                'status': 400,
+                'message': errors.array().join(',')
+            })
         } else {
-            console.log(e)
-            res.status(500).json({
-                message : "INTERNAL SERVER ERROR",
-                status: "500"
+            console.log(err)
+            res.status(503).send({
+                status: "503",
+                message: "Failed for load database"
             })
         }
     })
