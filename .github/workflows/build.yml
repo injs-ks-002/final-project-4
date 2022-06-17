@@ -22,6 +22,8 @@ jobs:
         postgresql db: final_project4
         postgresql user: postgres
         postgresql password: root
+    - name: Rollback DB
+      run: sudo npm run db:rollback
     - name: Migrate DB
       run: sudo npm run db:migrate
     - name: Run DB seed
